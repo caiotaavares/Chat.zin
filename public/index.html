@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatzinho</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.js" integrity="sha512-n/4gHW3atM3QqRcbCn6ewmpxcLAHGaDjpEBu4xZd47N0W2oQ+6q7oc3PXstrJYXcbNU1OHdQ1T7pAP+gi5Yu8g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.js" integrity="sha512-9mpsATI0KClwt+xVZfbcf2lJ8IFBAwsubJ6mI3rtULwyM3fBmQFzj0It4tGqxLOGQwGfJdk/G+fANnxfq9/cew==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <form id="chat">
+        <input type="text" name="username" placeholder="User">
+        <div class="messages"></div>
+        <input type="text" name="message" placeholder="Message">
+        <button type="submit">Enviar</button>
+    </form>
+    
+    <script type="text/javascript">
+        // Faz o front ouvir a conexão via socket
+        var socket = io('http://localhost:3000');
+
+        function renderMessage(data) {
+            $('.messages').append('<div class="message"><strong>'+data.author+': </strong>'+data.message+'</div>')
+        };
+
+        // Compartilha a mensagem enviada com todos
+        // os usuário conectados na aplicação
+        socket.on('receivedMessage', function(data) {
+            renderMessage(data);
+        });
+
+        socket.on('previousMessages', function(arrMessages) {
+            for (arrMessage of arrMessages) {
+                renderMessage(arrMessage);
+            }
+        });
+
+        // Envia os dados no submit
+        $('#chat').submit(function(event) {
+            // Pagina não recarrega  
+            event.preventDefault();
+
+            var author = $('input[name=username]').val();
+            var message = $('input[name=message]').val();
+    
+            if (author.length && message.length) {
+                var messageObject = {
+                    author: author,
+                    message: message
+                };
+
+                renderMessage(messageObject);
+    
+                // Envia a mesagem pro backend com o nome
+                // sendMessage
+                // console.log(messageObject);
+                socket.emit('sendMessage', messageObject);
+            }
+        });
+
+    </script>
+
+</body>
+</html>
